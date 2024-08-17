@@ -38,6 +38,8 @@ from MyGlobal import MyGlobals
 from dqnMEC import DQNAgent, BDQNAgent
 from SarsaMEC import SARSAAgent
 
+# NUM_EDGE_SERVER = 5
+
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 def Run_Random():
     files=open("random2.csv","w")
@@ -85,7 +87,8 @@ def Run_Fuzzy():
             # m0=a[9]+a[11]/a[10]
             #action=np.argmin([m0,m1,m2,m3])
             
-            action=np.random.choice([0,0,0,1,2,3])
+            # action=np.random.choice([0,0,0,1,2,3])
+            action = np.random.choice([0,0,0,1,2,3,4,5])
             action=0
             action=fuzzy_logic.choose_action(a)
             a,b,c,d=env.step(action)
@@ -171,7 +174,7 @@ def build_model(state_size, num_actions):
 
 def get_model():
     try:
-        model = load_model('my_model.h5')
+        model = load_model('myfinalmodel.h5')
     except Exception as e: 
         print(e)
     return model
@@ -195,7 +198,7 @@ def initRun(folder_name):
     return folder, memory, callbacks, callback2
 
 def Run_DQL(folder_name):
-    #model=build_model(14,4)
+    # model=build_model(14,6)
     model = get_model()
     folder, memory, callbacks, callback2 = initRun(folder_name)
     #policy = EpsGreedyQPolicy(0.1)
@@ -210,8 +213,11 @@ def Run_DQL(folder_name):
               file = folder)
     except Exception as e:
         print(e)
-    # files = open("testDQL.csv","w")
-    # files.write("kq\n")
+    files = open("testDQL.csv","w")
+    files.write("kq\n")
+    callbacks = CustomerTrainEpisodeLogger("DQL_5phut.csv")
+    callbacks2 = ModelIntervalCheckpoint("weight_DQL.h5f" , interval =50000)
+    callbacks3 = TestLogger11(files)
     dqn.compile(Adam(learning_rate=1e-3), metrics=['mae'])
     try:
         dqn.fit(env, nb_steps= 100000, visualize=False, verbose=2,callbacks=[callbacks,callback2])
@@ -290,8 +296,8 @@ def Run_DDQL(folder_name):
     dqn.fit(env, nb_steps= 5000, visualize=False, verbose=2,callbacks=[callbacks,callback2])
     
 def Run_Sarsa(i, file):
-    model=build_model(14,4)
-    num_actions = 4
+    model=build_model(14,6)
+    num_actions = 6
     # policy has been changed to also return "exploit", be care
     policy = EpsGreedyQPolicy(0.1) 
     env = BusEnv("Sarsa")
@@ -317,7 +323,7 @@ def Run_Sarsa(i, file):
 
 def Run_FDQO(folder_name):
     folder, memory, callbacks, callback2 = initRun(folder_name)
-    FDQO_method = Model_Deep_Q_Learning(14,4)    #In model  size, action
+    FDQO_method = Model_Deep_Q_Learning(14,6)    #In model  size, action
     baseline = None  # None if using FDQO, >0 and <1 if using baseline
     threshold = 0.9     # if reward received bigger than threshold, using Fuzzy Logic
     k = 0.6     # Same formula as BDQL
@@ -334,7 +340,7 @@ def Run_FDQO(folder_name):
     
 def Run_BFDQO(folder_name):
     folder, memory, callbacks, callback2 = initRun(folder_name)
-    FDQO_method = Model_Deep_Q_Learning(14,4)    #In model  size, action
+    FDQO_method = Model_Deep_Q_Learning(14,6)    #In model  size, action
     baseline = 0.5  # None if using FDQO, >0 and <1 if using baseline
     threshold = 0.85     # if reward received bigger than threshold, using Fuzzy Logic
     k = 0.6     # Same formula as BDQL
@@ -368,7 +374,7 @@ if __name__=="__main__":
     for i in range(1,2):
         try:
             #Run_DQL("DQN_BoltzmannQPolicy/tau_0.1/" + str(i))
-            Run_DQL("DQN_MaxBoltzmannQPolicy/eps_0.1_tau_1.0_clipmin_100/" + str(4))
+            Run_DQL("DQN_MaxBoltzmannQPolicy/eps_0.1_tau_1.0_clipmin_100/" + str(6))
             #Run_BDQL("Db-DQN_5k/" + str(i))
             #Run_BDQL("Temp/" + str(i))
             #Run_Static_BDQL("Sb-DQN_5k/" + str(i))
